@@ -5,7 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>지뢰찾기</title>
 <style>
-  table { border-collapse: collapse; }
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: black;
+  }
+  table { 
+    border-collapse: collapse; 
+  }
   td {
     border: 1px solid #bbb;
     text-align: center;
@@ -20,8 +28,42 @@
 </style>
 </head>
 <body>
-<style>
+<table id="table">
+  <tbody id="tbody"></tbody>
+</table>
+<script>
+  const $table = document.querySelector('#table')
+  const $tbody = document.querySelector('#tbody')
+  let mine = [];
+  let rows = [];
+  let cells = [];
+
+  function createTable() { // 게임판 10x10 생성 및 자손 할당 코드
+    for (let i = 0; i < 10; i++) {
+      const $tr = document.createElement('tr');
+      for (let j = 0; j < 10; j++) {
+        const $td = document.createElement('td');
+        $tr.appendChild($td);
+        $td.addEventListener('click', clickFunction)
+        cells.push($td);
+      }
+      $tbody.appendChild($tr);
+      rows.push($tr)
+    }
+    createMine();
+  }
+
+  function createMine() {
+    for (let i = 0; i < 10; i++) {
+      mine.push(1);
+    }
+  }
   
-</style>  
+  function clickFunction() {
+    console.log(this)
+  }
+
+  createTable();
+</script>
 </body>
 </html>
