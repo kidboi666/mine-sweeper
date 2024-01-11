@@ -9,7 +9,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: black;
+    background: linear-gradient(320deg, #eb92be, #ffef78, #63c9b4);
   }
   table { 
     border-collapse: collapse; 
@@ -128,11 +128,36 @@
     return i;
   }
 
-  function openAround(rowIndex, cellIndex) {
-    // const open = CODE.OPENED;
-    // if (data[rowIndex - 1]?.[cellIndex - 1] === CODE.NORMAL) {
+  function open(rowIndex, cellIndex) {
+    const target = $tbody.children[rowIndex]?.children[cellIndex]; // 내가 누른 지점 주변을 모두 변수에 할당 (undefined도)
+    console.log(!!target)
+    if (!target) { // 내부 값에 undefined가 있어도 에러 없이 다음 코드가 실행되게 하는 코드 (안전장치?)
+      return;
+    }
+    const count = countMine(rowIndex, cellIndex); // 지뢰찾는 기능 변수 count에 할당
+    // target.textContent = count||''; // 화면에 결과값 (지뢰갯수이거나 "") 출력
+    if (!count) {
+      target.textContent = '';
+    } else {
+      target.textContent = count;
+    }
+    target.className = 'opened'; // 클래스네임 부여로 css 변경
+    data[rowIndex][cellIndex] = count; // ??
+    return count;
+  }  
 
-    // }
+  function openAround(ri, ci) {  // 주변 빈칸을 열어주는 코드
+    const count = open(ri, ci); // 빈칸을 열어주는 핵심 함수를 count에 할당
+    if (count === 0) { // 주변 지뢰 값이 0개라면 모두 오픈
+      open(ri - 1, ci - 1);
+      open(ri - 1, ci);
+      open(ri - 1, ci + 1);
+      open(ri, ci - 1);
+      open(ri, ci + 1);
+      open(ri + 1, ci - 1);
+      open(ri + 1, ci);
+      open(ri + 1, ci + 1);
+    }
   }
 
   function onLeftClick(event) {
@@ -140,13 +165,8 @@
     const rowIndex = target.parentNode.rowIndex;
     const cellIndex = target.cellIndex;
     const cellData = data[rowIndex][cellIndex];
-    console.log(rowIndex,cellIndex)
     if (cellData === CODE.NORMAL) {
-      const count = countMine(rowIndex, cellIndex);
-      // openAround(rowIndex, cellIndex);
-      target.textContent = count||'';
-      target.className = 'opened';
-      data[rowIndex][cellIndex] = count;
+      openAround(rowIndex, cellIndex); // 지뢰가 주변에 몇개인지 파악하고, 빈칸을 모두 열고 주변 지뢰 갯수를 출력하는 함수
     } else if (cellData === CODE.MINE) {
       alert('게임이 종료되었습니다.');
       target.textContent = '펑'
