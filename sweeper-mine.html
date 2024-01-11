@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: black;
+  }
+  table { 
+    border-collapse: collapse; 
+  }
+  td {
+    border: 1px solid #bbb;
+    text-align: center;
+    line-height: 20px;
+    width: 30px;
+    height: 30px;
+    background: #888;
+  }
+  td.opened { background-color: white; }
+  td.flag { background-color: red; }
+  td.question { background-color: orange; }
+  </style>
+</head>
+<body>
+  <table id="table">
+    <tbody></tbody>
+  </table>
+  <div id="result"></div>
+<script>
+  const $tbody = document.querySelector('#table tbody');
+  const $result = document.querySelector('#result');
+  const row = 10; // 행의 갯수
+  const cell = 10; // 열의 갯수
+  const mine = 10; // 지뢰 갯수
+  const CODE = { // 각 칸의 성질에 따라 코드를 나눠놓음
+    NORMAL: -1, // 닫힌 칸 (지뢰 없음)
+    QUESTION: -2, // 물음표마크
+    FLAG: -3, // 깃발마크
+    QUESTION_MINE: -4, // 물음표마크인데 지뢰일때 
+    FLAG_MINE: -5, // 깃발마크인데 지뢰일때
+    MINE: -6, // 지뢰마크
+    OPENED: 0, // 0 이상이면 다 모두 열린 칸
+  }
+  let data; // 데이터를 담는 곳
+
+  function plantMine() { // 지뢰를 생성하는 코드
+    const candidate = 
+    Array(row * cell) // 10곱하기 10, 즉 length가 100인 배열 생성
+    .fill() // length 각각의 value(undefined)를 넣어줌
+    .map((arr, i) => { // map(요소, 인덱스, 배열)
+      return i;
+    });// 각 요소에 인덱스를 반환해 넣어줌
+    
+    const shuffle = []; // 뽑은 지뢰 보관하는 배열
+
+    while (candidate.length > row * cell - mine) { // 후보군의 길이가 100 - 10 보다 클때까지
+      const chosen = candidate.splice(Math.floor(Math.random() * candidate.length), 1)[0]; 
+      // splice(지우고싶은인덱스, 갯수)를 뽑아서 즉시 chosen에 할당
+      shuffle.push(chosen); // shuffle에 바로 푸쉬
+    }
+    const data = []; // 빈 배열 생성
+    for (let i = 0; i < row; i++) { // (10이 될때까지) 아무것도 없는 닫힌칸 뿌리는 코드
+      const rowData = []; // 빈배열
+      data.push(rowData); // 빈배열인 data에 빈배열 푸쉬 
+      for (let j = 0; j < cell; j++) { // (10이 될때까지)
+        rowData.push(CODE.NORMAL); // rowData에 닫힌칸(-1) 뿌리기
+      }
+    }
+    // shuffle = [85, 19, 93]
+    for (let k = 0; k < shuffle.length; k++) { // (셔플길이=10 만큼)뽑은 지뢰 뿌리는 코드
+      const ver = Math.floor(shuffle[k] / cell); // 85라고 치면, 8번째 줄 5번째니까 몇줄인지 알기위해 10을 나눔
+      const hor = shuffle[k] % cell; // 85라고 치면, 10으로 나눴을때 5가 되니 5번째 칸.
+      data[ver][hor] = CODE.MINE; // data[8][5] = 지뢰 위치 표적 확인
+    }
+    return data;
+  }
+
+  function onRightClick(event) { // 오른쪽 클릭 이벤트 코드
+    event.preventDefault(); // 기본 동작 초기화
+    const target = event.target; 
+    const rowIndex = target.parentNode.rowIndex; // 행 
+    const cellIndex = target.cellIndex; // 열
+    const cellData = data[rowIndex][cellIndex]; // 열 데이터
+    if (cellData === CODE.MINE) { // 오른쪽 클릭 마크 표시 코드 (오른쪽 클릭시 지뢰면)
+      data[rowIndex][cellIndex] = CODE.QUESTION_MINE; // 물음표 지뢰 마크로 (데이터)
+      target.className = 'question'; // (css화면) 
+      target.textContent = '?'; // (화면)
+    } else if (cellData === CODE.QUESTION_MINE) { // 오른쪽 클릭시 물음표 지뢰면
+      data[rowIndex][cellIndex] = CODE.FLAG_MINE; // 깃발 지뢰 마크로 (데이터)
+      target.className = 'flag'; // (css화면) 
+      target.textContent = '!'; // (화면)
+    } else if (cellData === CODE.FLAG_MINE) { // 오른쪽 클릭시 깃발 지뢰면
+      data[rowIndex][cellIndex] = CODE.MINE; // 다시 닫힌 지뢰 마크로 (데이터)
+      target.className = ''; // (css화면) 
+      target.textContent = 'X'; // (화면)개발 편의를 위해 ------------------------------------------------
+    } else if (cellData === CODE.NORMAL) { // 오른쪽 클릭시 닫힌빈칸이라면
+      data[rowIndex][cellIndex] = CODE.QUESTION; // 물음표 마크로 (데이터)
+      target.className = 'question'; // (css화면) 
+      target.textContent = '?'; // (화면)
+    } else if (cellData === CODE.QUESTION) { // 오른쪽 클릭시 물음표 마크라면
+      data[rowIndex][cellIndex] = CODE.FLAG;  // 깃발 마크로 (데이터)
+      target.className = 'flag'; // (css화면) 
+      target.textContent = '!'; // (화면)
+    } else if (cellData === CODE.FLAG) { // 오른쪽 클릭시 깃발 마크라면
+      data[rowIndex][cellIndex] = CODE.NORMAL; // 다시 닫힌 빈칸으로 (데이터)
+      target.className = ''; // (css화면) 
+      target.textContent = ''; // (화면)
+    }
+  }
+
+  function countMine(rowIndex, cellIndex) { // 근처 지뢰 갯수 표시 코드 . 매개변수로 rowIndex와 cellIndex 받음
+    const mines = [CODE.MINE, CODE.QUESTION_MINE, CODE.FLAG_MINE];
+    let i = 0;
+    mines.includes(data[rowIndex - 1]?.[cellIndex - 1]) && i++;
+    mines.includes(data[rowIndex - 1]?.[cellIndex]) && i++;
+    mines.includes(data[rowIndex - 1]?.[cellIndex + 1]) && i++;
+    mines.includes(data[rowIndex]?.[cellIndex - 1]) && i++;
+    mines.includes(data[rowIndex]?.[cellIndex + 1]) && i++;
+    mines.includes(data[rowIndex + 1]?.[cellIndex - 1]) && i++;
+    mines.includes(data[rowIndex + 1]?.[cellIndex]) && i++;
+    mines.includes(data[rowIndex + 1]?.[cellIndex + 1]) && i++;
+    return i;
+  }
+
+  function openAround(rowIndex, cellIndex) {
+    // const open = CODE.OPENED;
+    // if (data[rowIndex - 1]?.[cellIndex - 1] === CODE.NORMAL) {
+
+    // }
+  }
+
+  function onLeftClick(event) {
+    const target = event.target;
+    const rowIndex = target.parentNode.rowIndex;
+    const cellIndex = target.cellIndex;
+    const cellData = data[rowIndex][cellIndex];
+    console.log(rowIndex,cellIndex)
+    if (cellData === CODE.NORMAL) {
+      const count = countMine(rowIndex, cellIndex);
+      // openAround(rowIndex, cellIndex);
+      target.textContent = count||'';
+      target.className = 'opened';
+      data[rowIndex][cellIndex] = count;
+    } else if (cellData === CODE.MINE) {
+      alert('게임이 종료되었습니다.');
+      target.textContent = '펑'
+      target.className = 'opened'
+      $tbody.removeEventListener('contextmenu', onRightClick);
+      $tbody.removeEventListener('click', onLeftClick);
+    }
+  }
+
+  function drawTable() { // 테이블 그리는 함수 선언 (문서 불러오자마자 실행)
+    data = plantMine(); // 데이터에 지뢰심는+빈칸넣는 코드와 데이터를 할당
+    data.forEach((row, ri) => { // 데이터 값 하나하나에 반복문 실행(인자에는 행이 차례대로 들어감)
+      const $tr = document.createElement('tr'); // 행 만들고 넣기
+      row.forEach((cell, ci) => { // 행 하나하나에 반복문 실행 (인자에는 열의 셀이 하나씩 들어감)
+        const $td = document.createElement('td'); // 셀을 하나씩 할당
+        if (cell === CODE.MINE) { // 개발편의를 위해------------------------------------------------
+          $td.textContent = 'X';
+          const rowIndex = ri;
+          const cellIndex = ci;
+          console.log(ri, ci)
+        }
+        $tr.append($td);
+      })
+      $tbody.append($tr);
+      $tbody.addEventListener('contextmenu', onRightClick); // 이벤트 버블링
+      $tbody.addEventListener('click', onLeftClick);
+    })
+  }
+  drawTable();
+</script>
+</body>
+</html>

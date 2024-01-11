@@ -18,8 +18,8 @@
     border: 1px solid #bbb;
     text-align: center;
     line-height: 20px;
-    width: 20px;
-    height: 20px;
+    width: 30px;
+    height: 30px;
     background: #888;
   }
   td.opened { background-color: white; }
@@ -38,29 +38,36 @@
   let rows = [];
   let cells = [];
 
+  function createCellsIndex() {
+    for (let i = 0; i < cells.length; i++) {
+      cells.splice(i, 1, i+1);
+    }
+  }
+
   function createTable() { // 게임판 10x10 생성 및 자손 할당 코드
     for (let i = 0; i < 10; i++) {
       const $tr = document.createElement('tr');
       for (let j = 0; j < 10; j++) {
         const $td = document.createElement('td');
         $tr.appendChild($td);
-        $td.addEventListener('click', clickFunction)
+        $td.addEventListener('click', clickFunction);
         cells.push($td);
       }
       $tbody.appendChild($tr);
-      rows.push($tr)
+      rows.push($tr);
     }
-    createMine();
+    createCellsIndex();
+    createMine(); // 게임판 생성했으면 곧바로 지뢰 생성 함수 불러서 지뢰 깔아버리기
   }
 
   function createMine() {
-    for (let i = 0; i < 10; i++) {
-      mine.push(1);
+    for (let i = 0; i <= 10; i++) {
+      
     }
   }
   
   function clickFunction() {
-    console.log(this)
+    console.log(this);
   }
 
   createTable();
